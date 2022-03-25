@@ -82,7 +82,7 @@ int InitMySocket(void)
     EnableWindow(hwEdtLogin, FALSE);
     EnableWindow(hwBtnSend, FALSE);
     status=0;
-    // Шаг 1 - инициализация библиотеки Winsock
+    // РЁР°Рі 1 - РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ Р±РёР±Р»РёРѕС‚РµРєРё Winsock
     if (WSAStartup(0x202,(WSADATA *)&buff[0]))
     {
       EnableWindow(hwEdtPasswd, TRUE);
@@ -90,7 +90,7 @@ int InitMySocket(void)
       return -1;
     }
 
-    // Шаг 2 - создание сокета
+    // РЁР°Рі 2 - СЃРѕР·РґР°РЅРёРµ СЃРѕРєРµС‚Р°
 
     my_sock=socket(AF_INET,SOCK_STREAM,0);
     if (my_sock < 0)
@@ -101,19 +101,19 @@ int InitMySocket(void)
       return -1;
     }
 
-    // Шаг 3 - установка соединения, заполнение структуры sockaddr_in указание адреса и порта сервера
+    // РЁР°Рі 3 - СѓСЃС‚Р°РЅРѕРІРєР° СЃРѕРµРґРёРЅРµРЅРёСЏ, Р·Р°РїРѕР»РЅРµРЅРёРµ СЃС‚СЂСѓРєС‚СѓСЂС‹ sockaddr_in СѓРєР°Р·Р°РЅРёРµ Р°РґСЂРµСЃР° Рё РїРѕСЂС‚Р° СЃРµСЂРІРµСЂР°
     SOCKADDR_IN dest_addr;
     dest_addr.sin_family=AF_INET;
     dest_addr.sin_port=htons(atoi(&port[0]));
     HOSTENT *hst;
 
-    // преобразование IP адреса из символьного в сетевой формат
+    // РїСЂРµРѕР±СЂР°Р·РѕРІР°РЅРёРµ IP Р°РґСЂРµСЃР° РёР· СЃРёРјРІРѕР»СЊРЅРѕРіРѕ РІ СЃРµС‚РµРІРѕР№ С„РѕСЂРјР°С‚
     if (inet_addr(host)!=INADDR_NONE)
       dest_addr.sin_addr.s_addr=inet_addr(host);
     else
-      // попытка получить IP адрес по доменному имени сервера
+      // РїРѕРїС‹С‚РєР° РїРѕР»СѓС‡РёС‚СЊ IP Р°РґСЂРµСЃ РїРѕ РґРѕРјРµРЅРЅРѕРјСѓ РёРјРµРЅРё СЃРµСЂРІРµСЂР°
       if (hst=gethostbyname(host))
-         // hst->h_addr_list содержит не массив адресов, а массив указателей на адреса
+         // hst->h_addr_list СЃРѕРґРµСЂР¶РёС‚ РЅРµ РјР°СЃСЃРёРІ Р°РґСЂРµСЃРѕРІ, Р° РјР°СЃСЃРёРІ СѓРєР°Р·Р°С‚РµР»РµР№ РЅР° Р°РґСЂРµСЃР°
          ((unsigned long *)&dest_addr.sin_addr)[0]=((unsigned long **)hst->h_addr_list)[0][0];
       else 
          {
@@ -125,7 +125,7 @@ int InitMySocket(void)
          return -1;
          }
 
-    // адрес сервера получен – пытаемся установить соединение 
+    // Р°РґСЂРµСЃ СЃРµСЂРІРµСЂР° РїРѕР»СѓС‡РµРЅ вЂ“ РїС‹С‚Р°РµРјСЃСЏ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ СЃРѕРµРґРёРЅРµРЅРёРµ 
     if (connect(my_sock,(SOCKADDR *)&dest_addr, sizeof(dest_addr)))
        {
        EnableWindow(hwEdtPasswd, TRUE);
@@ -192,11 +192,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wparam,LPARAM lparam)
                 char * tempbuf='\0';
                 memset(&buff[0], '\0', 1024);
                 tempbuf = malloc(50);
-                //Считываем логин
+                //РЎС‡РёС‚С‹РІР°РµРј Р»РѕРіРёРЅ
                 memset(tempbuf, '\0', 50);
                 GetWindowText(hwEdtLogin, tempbuf, 49);
                 strncat(&buff[0], tempbuf, strlen(tempbuf));
-                //Считываем пароль
+                //РЎС‡РёС‚С‹РІР°РµРј РїР°СЂРѕР»СЊ
                 strcat(&buff[0],"@");
                 memset(tempbuf, '\0', 50);
                 GetWindowText(hwEdtPasswd, tempbuf, 49);
@@ -411,7 +411,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
   MSG msg;
   WNDCLASS w;
 
-  // Заводим свой класс для окна
+  // Р—Р°РІРѕРґРёРј СЃРІРѕР№ РєР»Р°СЃСЃ РґР»СЏ РѕРєРЅР°
   memset(&w,0,sizeof(WNDCLASS));
   w.style = CS_HREDRAW | CS_VREDRAW;
   w.lpfnWndProc = WndProc;
@@ -422,10 +422,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
   w.hIcon=LoadIcon(hInstance, MAKEINTRESOURCE(IDI_CONNECTED));
   RegisterClass(&w);
   
-  //Создаем окно
+  //РЎРѕР·РґР°РµРј РѕРєРЅРѕ
   hwnd = CreateWindowEx(WS_EX_TOPMOST,"AuthWindow","Auth Gateway Client", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,10,10,345,160,NULL,NULL,hInstance,NULL);
   
-  //Создаем на окне элементы управления
+  //РЎРѕР·РґР°РµРј РЅР° РѕРєРЅРµ СЌР»РµРјРµРЅС‚С‹ СѓРїСЂР°РІР»РµРЅРёСЏ
   hwLoginStatic=CreateWindowEx(0,"Static", langstring[16], WS_CHILD | WS_VISIBLE , 10,35,60,20,hwnd,0,hInstance,0);
   hwPasswdStatic=CreateWindowEx(0,"Static", langstring[17], WS_CHILD | WS_VISIBLE, 10,60,60,20,hwnd,0,hInstance,0);
   hwStatusStatic=CreateWindowEx(0,"Static", langstring[18], WS_CHILD | WS_VISIBLE | SS_CENTER, 10,8,320,20,hwnd,0,hInstance,0);
@@ -455,7 +455,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
   SetFocus(hwEdtPasswd);
 
   
-  //Помещаем окно в центр рабочего стола
+  //РџРѕРјРµС‰Р°РµРј РѕРєРЅРѕ РІ С†РµРЅС‚СЂ СЂР°Р±РѕС‡РµРіРѕ СЃС‚РѕР»Р°
   RECT rc,rcDesk;
   SystemParametersInfo(SPI_GETWORKAREA,0,&rcDesk,0);
   GetWindowRect(hwnd,&rc);
@@ -470,7 +470,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
   strcpy(m_NotifyIconData.szTip, "Auth Gateway Client");
   m_NotifyIconData.uFlags = NIF_ICON|NIF_TIP|NIF_MESSAGE;
   m_NotifyIconData.uCallbackMessage = WM_SHELLNOTIFY;
-  //Всплывающее меню для трея
+  //Р’СЃРїР»С‹РІР°СЋС‰РµРµ РјРµРЅСЋ РґР»СЏ С‚СЂРµСЏ
   hPopupMenu = CreatePopupMenu();
   AppendMenu(hPopupMenu, MF_STRING, WM_MENU_RESTORE, langstring[19]);
   AppendMenu(hPopupMenu, MF_STRING, WM_MENU_CONNECTION, langstring[10]);
@@ -478,7 +478,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
   AppendMenu(hPopupMenu, MF_STRING, WM_MENU_CLOSE, langstring[20]);
   AppendMenu(hPopupMenu, MF_STRING, WM_MENU_ABOUT, langstring[15]);
 
-  //Показываем окно
+  //РџРѕРєР°Р·С‹РІР°РµРј РѕРєРЅРѕ
   ShowWindow(hwnd, nCmdShow);
   UpdateWindow(hwnd);
 
