@@ -27,6 +27,7 @@ int timerint=300;
 HMENU	hPopupMenu;
 
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ShowResponse(char * respstr, long timeint){
 
@@ -45,14 +46,17 @@ void ShowResponse(char * respstr, long timeint){
        SetWindowText(hwStatusStatic, "Неверное сочетание логина и пароля");
        SetTimer(hwnd, 2, 5000, NULL);
   }
-
   else if (!strcmp(respstr, "INVALID")){
        SetWindowText(hwStatusStatic, "Неверный запрос");
        SetTimer(hwnd, 2, 5000, NULL);
   }
-
   else if (!strcmp(respstr, "NORESPONSE")){
        SetWindowText(hwStatusStatic, "Сервер авторизации не отвечает");
+       SetTimer(hwnd, 2, 5000, NULL);
+  }
+  else if (!strcmp(respstr, "FLOOD")){
+       SetWindowText(hwStatusStatic, "Некорректное согласование со шлюзом");
+       status=1;
        SetTimer(hwnd, 2, 5000, NULL);
   }
   else {
@@ -65,6 +69,7 @@ void ShowResponse(char * respstr, long timeint){
 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,7 +204,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wparam,LPARAM lparam)
                 send(my_sock, buff, strlen(buff), 0);
                 memset(&buff[0], '\0', 1024);
                 }
-            else if (status==1)
+            else 
                 {
                 ShowResponse(&buff[0], timerint);
                 }
@@ -328,7 +333,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wparam,LPARAM lparam)
   return DefWindowProc(hwnd,Message,wparam,lparam);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 
