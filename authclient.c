@@ -3,7 +3,7 @@
 #include <string.h>
 #include <shellapi.h>
 #include <winsock.h>
-
+#include <ctype.h>
 
 #define IDI_CONNECTED 1
 #define IDI_DISCONNECTED 2
@@ -27,8 +27,10 @@ int timerint=300;
 HMENU	hPopupMenu;
 typedef char * t_langstring;
 t_langstring langstring[21];
-
-
+int iSecretUsage    = 0;
+int iUserPass       = 0;
+char szUserName[100] = "\0";
+char szPassword[100] = "\0";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ShowResponse(char * respstr, long timeint){
@@ -165,7 +167,10 @@ void CloseMySocket(void)
   //EnableWindow(hwEdtPasswd, TRUE);
   //EnableWindow(hwBtnSend, TRUE);
   KillTimer(hwnd, 1);
-
+  if (iUserPass==1)
+  {
+    SendMessage(hwnd, WM_CLOSE, 0, 0); 
+  }
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -176,6 +181,7 @@ void CloseMySocket(void)
 LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wparam,LPARAM lparam)
 {
  POINT pt;
+ int iRes = 0;
   
   
   switch (Message){
@@ -250,17 +256,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wparam,LPARAM lparam)
 
     case WM_CLOSE: 
          {         
-         if (IDNO==MessageBox(hwnd, langstring[13], langstring[14], MB_YESNO | MB_ICONQUESTION))
-             return 0;
-         break;
+			if (iUserPass==0)
+				{
+				if (IDNO==MessageBox(hwnd, langstring[13], langstring[14], MB_YESNO | MB_ICONQUESTION))
+					return 0;
+				break;
+				}
+			else
+				{
+				}
          }
  
     case WM_COMMAND: 
          { 
          if ((wparam == BN_CLICKED) && (lparam == (int)hwBtnSend))
             {
-             if (GetWindowTextLength(hwBtnSend)==12)
-                 InitMySocket();
+             //if (GetWindowTextLength(hwBtnSend)==12)
+             if (status==0)
+				 {
+				     iRes = InitMySocket();
+                 if ((iUserPass==1)&&(iRes==-1))
+					  {
+                   SendMessage(hwnd, WM_CLOSE, 0, 0); 
+					  }
+				 }
              else
                  CloseMySocket();
             }
@@ -403,10 +422,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
   if (GetPrivateProfileString("language", "string20", "", langstring[19], 20, ".\\authclient.ini") <= 0) { strcpy (langstring[19], "Restore"); }
   if (GetPrivateProfileString("language", "string21", "", langstring[20], 20, ".\\authclient.ini") <= 0) { strcpy (langstring[20], "Close"); }
 
-  
-  
-  
-  
 
   MSG msg;
   WNDCLASS w;
@@ -430,30 +445,61 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
   hwPasswdStatic=CreateWindowEx(0,"Static", langstring[17], WS_CHILD | WS_VISIBLE, 10,60,60,20,hwnd,0,hInstance,0);
   hwStatusStatic=CreateWindowEx(0,"Static", langstring[18], WS_CHILD | WS_VISIBLE | SS_CENTER, 10,8,320,20,hwnd,0,hInstance,0);
 
-  if (!strcmp(lpCmdLine, "SecretUsage"))
+	//Разберем параметры запуска
+	if (strstr(lpCmdLine,"help")||strstr(lpCmdLine,"--help")||strstr(lpCmdLine,"/help")||strstr(lpCmdLine,"/?"))
+	{
+		MessageBox(hwnd, "Usage:\nAuthClient [SecretUsage] [-u:UserName@Password]\n\n\tAuthor: Ardzhanov Anton\n\tE-Mail: antonardov@mail.ru\n", langstring[15], MB_OK | MB_ICONINFORMATION);
+		return 0;
+	}
+	if (strstr(lpCmdLine,"SecretUsage"))
+	{
+		iSecretUsage = 1;
+	}
+	if (strstr(lpCmdLine,"-u:"))
+	{
+		iUserPass = 1;
+		char szUserPass[100]="\0"; 
+		char* iPos = strstr(lpCmdLine,"-u:");
+		memcpy(szUserPass, iPos+3, 100);
+		iPos = strstr(szUserPass,"@");
+		memcpy(szUserName, szUserPass, iPos-szUserPass);
+		memcpy(szPassword, iPos+1, 100);
+		//MessageBox(hwnd, szPassword, szUserName, MB_OK | MB_ICONINFORMATION);
+	}
+
+  //Проверим параметры запуска
+  if (iSecretUsage)
       {
-      hwEdtLogin = CreateWindowEx(0,"EDIT","", WS_CHILD | WS_VISIBLE | WS_BORDER, 75,35,255,20,hwnd,0,hInstance,0);
+			hwEdtLogin = CreateWindowEx(0,"EDIT","", WS_CHILD | WS_VISIBLE | WS_BORDER, 75,35,255,20,hwnd,0,hInstance,0);
       }
   else 
       {
-      TCHAR name[255]="\0"; 
-      DWORD size = 255; 
-      char szDomain[512]="\0"; 
-      GetUserName(name, &size);
-      GetEnvironmentVariable("UserDomain",szDomain,127);
-      if (strlen(szDomain)>0)
-         {
-          strncat(szDomain, "\\", 512);
-         }
-      strncat(szDomain, name, 512);
-      
-      hwEdtLogin = CreateWindowEx(0,"EDIT", szDomain, WS_CHILD | WS_DISABLED | WS_VISIBLE | WS_BORDER, 75,35,255,20,hwnd,0,hInstance,0);
+			TCHAR name[255]="\0"; 
+			DWORD size = 255; 
+			char szDomain[512]="\0"; 
+			GetUserName(name, &size);
+			GetEnvironmentVariable("UserDomain",szDomain,127);
+			if (strlen(szDomain)>0)
+				{
+				strncat(szDomain, "\\", 512);
+				}
+			strncat(szDomain, name, 512);
+			
+			hwEdtLogin = CreateWindowEx(0,"EDIT", szDomain, WS_CHILD | WS_DISABLED | WS_VISIBLE | WS_BORDER, 75,35,255,20,hwnd,0,hInstance,0);
       }
   
   hwEdtPasswd = CreateWindowEx(0,"EDIT","", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_PASSWORD, 75,60,255,20,hwnd,0,hInstance,0);
   hwBtnSend = CreateWindowEx(0,"Button", langstring[12],WS_CHILD | WS_VISIBLE | SS_CENTER, 10,95,320,25,hwnd,0,hInstance,0);
   SetFocus(hwEdtPasswd);
 
+	if (iUserPass)
+	{
+		SetWindowText(hwEdtLogin, szUserName);
+		SetWindowText(hwEdtPasswd, szPassword);
+	}
+	memset(szUserName, '\0', 100);
+	memset(szPassword, '\0', 100);
+  
   
   //Помещаем окно в центр рабочего стола
   RECT rc,rcDesk;
@@ -482,14 +528,18 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
   ShowWindow(hwnd, nCmdShow);
   UpdateWindow(hwnd);
 
- 
+	if (iUserPass)
+	{
+		SendMessage(hwnd, WM_COMMAND, BN_CLICKED, (int)hwBtnSend);
+	}
+
   while(GetMessage(&msg,NULL,0,0))
   {
     if( ( WM_KEYDOWN == msg.message ) && ( VK_RETURN  == msg.wParam  ) && ( hwEdtPasswd ==msg.hwnd))
-        {
+      {
         SendMessage(hwnd, WM_COMMAND, BN_CLICKED, (int)hwBtnSend);
         continue;
-        }
+      }
     TranslateMessage(&msg);
     DispatchMessage(&msg);
   }
