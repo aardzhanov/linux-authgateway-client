@@ -1,0 +1,25 @@
+#define IDI_CONNECTED 1
+#define IDI_DISCONNECTED 2
+
+IDI_CONNECTED ICON DISCARDABLE "connected.ico"
+IDI_DISCONNECTED ICON DISCARDABLE "disconnected.ico"
+
+
+1 VERSIONINFO 
+FILEVERSION 1,1,0,1
+
+PRODUCTVERSION 1,1,0,1 
+{ 
+  BLOCK "StringFileInfo" 
+  { 
+   BLOCK "040904E4" 
+   { 
+    VALUE "FileVersion", "1.1.0.1" 
+    VALUE "ProductVersion", "1.1.0.1" 
+    VALUE "FileDescription", "Auth Gateway Client" 
+    VALUE "LegalCopyright", "Ardzhanov Anton (Арджанов Антон)" 
+    VALUE "OriginalFilename", "authclient.exe" 
+    VALUE "ProductName", "Auth Gateway Client" 
+   } 
+  } 
+}
