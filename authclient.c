@@ -25,6 +25,8 @@ SOCKET my_sock;
 char status=0;
 int timerint=300;
 HMENU	hPopupMenu;
+typedef char * t_langstring;
+t_langstring langstring[21];
 
 
 
@@ -37,30 +39,30 @@ void ShowResponse(char * respstr, long timeint){
       m_NotifyIconData.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CONNECTED));               
       Shell_NotifyIcon(NIM_MODIFY, &m_NotifyIconData);
       SendMessage(hwnd,WM_SYSCOMMAND, SC_MINIMIZE, 0);
-      SetWindowText(hwStatusStatic, "Доступ разрешен");
+      SetWindowText(hwStatusStatic, langstring[0]);
       SetTimer(hwnd, 1, timeint*1000, NULL);
       status=2;
       EnableWindow(hwBtnSend, TRUE);
   }
   else if (!strcmp(respstr, "REJECT")){
-       SetWindowText(hwStatusStatic, "Неверное сочетание логина и пароля");
+       SetWindowText(hwStatusStatic, langstring[1]);
        SetTimer(hwnd, 2, 5000, NULL);
   }
   else if (!strcmp(respstr, "INVALID")){
-       SetWindowText(hwStatusStatic, "Неверный запрос");
+       SetWindowText(hwStatusStatic, langstring[2]);
        SetTimer(hwnd, 2, 5000, NULL);
   }
   else if (!strcmp(respstr, "NORESPONSE")){
-       SetWindowText(hwStatusStatic, "Сервер авторизации не отвечает");
+       SetWindowText(hwStatusStatic, langstring[3]);
        SetTimer(hwnd, 2, 5000, NULL);
   }
   else if (!strcmp(respstr, "FLOOD")){
-       SetWindowText(hwStatusStatic, "Некорректное согласование со шлюзом");
+       SetWindowText(hwStatusStatic, langstring[4]);
        status=1;
        SetTimer(hwnd, 2, 5000, NULL);
   }
   else {
-       SetWindowText(hwStatusStatic, "Некорректный ответ шлюза");
+       SetWindowText(hwStatusStatic, langstring[5]);
        SetTimer(hwnd, 2, 5000, NULL);
   }
 
@@ -84,7 +86,7 @@ int InitMySocket(void)
     if (WSAStartup(0x202,(WSADATA *)&buff[0]))
     {
       EnableWindow(hwEdtPasswd, TRUE);
-      SetWindowText(hwStatusStatic, "Не могу инициализировать библиотеку WinSock2");
+      SetWindowText(hwStatusStatic, langstring[6]);
       return -1;
     }
 
@@ -95,7 +97,7 @@ int InitMySocket(void)
     {
       EnableWindow(hwEdtPasswd, TRUE);
       EnableWindow(hwBtnSend, TRUE);
-      SetWindowText(hwStatusStatic, "Ошибка создания сокета");
+      SetWindowText(hwStatusStatic, langstring[7]);
       return -1;
     }
 
@@ -115,7 +117,7 @@ int InitMySocket(void)
          ((unsigned long *)&dest_addr.sin_addr)[0]=((unsigned long **)hst->h_addr_list)[0][0];
       else 
          {
-         SetWindowText(hwStatusStatic, "Невозможно разрешить имя в IP");
+         SetWindowText(hwStatusStatic, langstring[8]);
          EnableWindow(hwEdtPasswd, TRUE);
          EnableWindow(hwBtnSend, TRUE);
          closesocket(my_sock);
@@ -128,7 +130,7 @@ int InitMySocket(void)
        {
        EnableWindow(hwEdtPasswd, TRUE);
        EnableWindow(hwBtnSend, TRUE);
-       SetWindowText(hwStatusStatic, "Ошибка соединения с сервером");
+       SetWindowText(hwStatusStatic, langstring[9]);
        closesocket(my_sock);
        WSACleanup();
        return -1;
@@ -136,7 +138,7 @@ int InitMySocket(void)
 
      
     WSAAsyncSelect(my_sock, hwnd,  SOCKET_READY, FD_READ | FD_CLOSE);
-    SetWindowText(hwBtnSend, "Отключиться");
+    SetWindowText(hwBtnSend, langstring[10]);
     EnableMenuItem(hPopupMenu, WM_MENU_CONNECTION, MF_BYCOMMAND || MF_ENABLED);
     memset(&buff[0], '\0', 1024);
     return 0;
@@ -150,11 +152,11 @@ void CloseMySocket(void)
 {
   if (status==2) 
       {
-       SetWindowText(hwStatusStatic, "Соединение разорвано");
+       SetWindowText(hwStatusStatic, langstring[11]);
        EnableWindow(hwEdtPasswd, TRUE);
       }
   status=0;
-  SetWindowText(hwBtnSend, "Подключиться");
+  SetWindowText(hwBtnSend, langstring[12]);
   EnableMenuItem(hPopupMenu, WM_MENU_CONNECTION, MF_BYCOMMAND || MF_GRAYED);
   m_NotifyIconData.hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DISCONNECTED));               
   Shell_NotifyIcon(NIM_MODIFY, &m_NotifyIconData);
@@ -248,7 +250,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wparam,LPARAM lparam)
 
     case WM_CLOSE: 
          {         
-         if (IDNO==MessageBox(hwnd, "Вы действительно хотите выйти из программы?", "Выход", MB_YESNO | MB_ICONQUESTION))
+         if (IDNO==MessageBox(hwnd, langstring[13], langstring[14], MB_YESNO | MB_ICONQUESTION))
              return 0;
          break;
          }
@@ -279,7 +281,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wparam,LPARAM lparam)
                              CloseMySocket();
                          break;
                     case WM_MENU_ABOUT:
-                         MessageBox(hwnd, "Автор: Арджанов Антон\nE-Mail: AArdzhanov@krasnodar.kes.ru\nТелефон: (861) 224-03-13\nКраснодар, 2006", "О программе", MB_OK | MB_ICONINFORMATION);
+                         MessageBox(hwnd, "Author: Ardzhanov Anton\nE-Mail: antonardov@mail.ru\n", langstring[15], MB_OK | MB_ICONINFORMATION);
                          break;
                     }
             }
@@ -352,11 +354,59 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
    
   if (GetPrivateProfileString("server", "host", "", &host[0], 100, ".\\authclient.ini")<=0 || GetPrivateProfileString("server", "port", "", &port[0], 10, ".\\authclient.ini")<=0)
       {
-       MessageBox(hwnd, "Не могу определить настройки\nПроверьте наличие файла authclient.ini", "Message", MB_ICONERROR);
+       MessageBox(hwnd, "Can not open authclient.ini", "Message", MB_ICONERROR);
        return 2;
       }
 
+  langstring[0]=calloc(70, sizeof(char));
+  langstring[1]=calloc(70, sizeof(char));
+  langstring[2]=calloc(70, sizeof(char));
+  langstring[3]=calloc(70, sizeof(char));
+  langstring[4]=calloc(70, sizeof(char));
+  langstring[5]=calloc(70, sizeof(char));
+  langstring[6]=calloc(70, sizeof(char));
+  langstring[7]=calloc(70, sizeof(char));
+  langstring[8]=calloc(70, sizeof(char));
+  langstring[9]=calloc(70, sizeof(char));
+  langstring[10]=calloc(20, sizeof(char));
+  langstring[11]=calloc(70, sizeof(char));
+  langstring[12]=calloc(20, sizeof(char));
+  langstring[13]=calloc(100, sizeof(char));
+  langstring[14]=calloc(20, sizeof(char));
+  langstring[15]=calloc(20, sizeof(char));
+  langstring[16]=calloc(10, sizeof(char));
+  langstring[17]=calloc(10, sizeof(char));
+  langstring[18]=calloc(70, sizeof(char));
+  langstring[19]=calloc(20, sizeof(char));
+  langstring[20]=calloc(20, sizeof(char));
 
+  
+  if (GetPrivateProfileString("language", "string1", "", langstring[0], 70, ".\\authclient.ini") <= 0) { strcpy (langstring[0], "Access allowed"); }
+  if (GetPrivateProfileString("language", "string2", "", langstring[1], 70, ".\\authclient.ini") <= 0) { strcpy (langstring[1], "Incorrect username or password"); }
+  if (GetPrivateProfileString("language", "string3", "", langstring[2], 70, ".\\authclient.ini") <= 0) { strcpy (langstring[2], "Incorrect request"); }
+  if (GetPrivateProfileString("language", "string4", "", langstring[3], 70, ".\\authclient.ini") <= 0) { strcpy (langstring[3], "No response from auth server"); }
+  if (GetPrivateProfileString("language", "string5", "", langstring[4], 70, ".\\authclient.ini") <= 0) { strcpy (langstring[4], "Flood detected"); }
+  if (GetPrivateProfileString("language", "string6", "", langstring[5], 70, ".\\authclient.ini") <= 0) { strcpy (langstring[5], "Incorrect Response from auth gateway"); }
+  if (GetPrivateProfileString("language", "string7", "", langstring[6], 70, ".\\authclient.ini") <= 0) { strcpy (langstring[6], "Can not initialize WinSock2 library"); }
+  if (GetPrivateProfileString("language", "string8", "", langstring[7], 70, ".\\authclient.ini") <= 0) { strcpy (langstring[7], "Can not create socket"); }
+  if (GetPrivateProfileString("language", "string9", "", langstring[8], 70, ".\\authclient.ini") <= 0) { strcpy (langstring[8], "Can not resolve hostname to IP"); }
+  if (GetPrivateProfileString("language", "string10", "", langstring[9], 70, ".\\authclient.ini") <= 0) { strcpy (langstring[9], "Connection to auth gateway failed"); }
+  if (GetPrivateProfileString("language", "string11", "", langstring[10], 20, ".\\authclient.ini") <= 0) { strcpy (langstring[10], "Disconnect"); }
+  if (GetPrivateProfileString("language", "string12", "", langstring[11], 70, ".\\authclient.ini") <= 0) { strcpy (langstring[11], "Connection reset"); }
+  if (GetPrivateProfileString("language", "string13", "", langstring[12], 20, ".\\authclient.ini") <= 0) { strcpy (langstring[12], "Connect"); }
+  if (GetPrivateProfileString("language", "string14", "", langstring[13], 100, ".\\authclient.ini") <= 0) { strcpy (langstring[13], "Are you really want to exit?"); }
+  if (GetPrivateProfileString("language", "string15", "", langstring[14], 20, ".\\authclient.ini") <= 0) { strcpy (langstring[14], "Exit"); }
+  if (GetPrivateProfileString("language", "string16", "", langstring[15], 20, ".\\authclient.ini") <= 0) { strcpy (langstring[15], "About"); }
+  if (GetPrivateProfileString("language", "string17", "", langstring[16], 10, ".\\authclient.ini") <= 0) { strcpy (langstring[16], "Login:"); }
+  if (GetPrivateProfileString("language", "string18", "", langstring[17], 10, ".\\authclient.ini") <= 0) { strcpy (langstring[17], "Pass:"); }
+  if (GetPrivateProfileString("language", "string19", "", langstring[18], 70, ".\\authclient.ini") <= 0) { strcpy (langstring[18], "Enter data"); }
+  if (GetPrivateProfileString("language", "string20", "", langstring[19], 20, ".\\authclient.ini") <= 0) { strcpy (langstring[19], "Restore"); }
+  if (GetPrivateProfileString("language", "string21", "", langstring[20], 20, ".\\authclient.ini") <= 0) { strcpy (langstring[20], "Close"); }
+
+  
+  
+  
+  
 
   MSG msg;
   WNDCLASS w;
@@ -376,9 +426,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
   hwnd = CreateWindowEx(WS_EX_TOPMOST,"AuthWindow","Auth Gateway Client", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,10,10,345,160,NULL,NULL,hInstance,NULL);
   
   //Создаем на окне элементы управления
-  hwLoginStatic=CreateWindowEx(0,"Static","Логин: ", WS_CHILD | WS_VISIBLE , 10,35,60,20,hwnd,0,hInstance,0);
-  hwPasswdStatic=CreateWindowEx(0,"Static","Пароль:", WS_CHILD | WS_VISIBLE, 10,60,60,20,hwnd,0,hInstance,0);
-  hwStatusStatic=CreateWindowEx(0,"Static","Введите данные", WS_CHILD | WS_VISIBLE | SS_CENTER, 10,8,320,20,hwnd,0,hInstance,0);
+  hwLoginStatic=CreateWindowEx(0,"Static", langstring[16], WS_CHILD | WS_VISIBLE , 10,35,60,20,hwnd,0,hInstance,0);
+  hwPasswdStatic=CreateWindowEx(0,"Static", langstring[17], WS_CHILD | WS_VISIBLE, 10,60,60,20,hwnd,0,hInstance,0);
+  hwStatusStatic=CreateWindowEx(0,"Static", langstring[18], WS_CHILD | WS_VISIBLE | SS_CENTER, 10,8,320,20,hwnd,0,hInstance,0);
 
   if (!strcmp(lpCmdLine, "SecretUsage"))
       {
@@ -401,7 +451,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
       }
   
   hwEdtPasswd = CreateWindowEx(0,"EDIT","", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_PASSWORD, 75,60,255,20,hwnd,0,hInstance,0);
-  hwBtnSend = CreateWindowEx(0,"Button","Подключиться",WS_CHILD | WS_VISIBLE | SS_CENTER, 10,95,320,25,hwnd,0,hInstance,0);
+  hwBtnSend = CreateWindowEx(0,"Button", langstring[12],WS_CHILD | WS_VISIBLE | SS_CENTER, 10,95,320,25,hwnd,0,hInstance,0);
   SetFocus(hwEdtPasswd);
 
   
@@ -422,11 +472,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
   m_NotifyIconData.uCallbackMessage = WM_SHELLNOTIFY;
   //Всплывающее меню для трея
   hPopupMenu = CreatePopupMenu();
-  AppendMenu(hPopupMenu, MF_STRING, WM_MENU_RESTORE, "Развернуть");
-  AppendMenu(hPopupMenu, MF_STRING, WM_MENU_CONNECTION, "Отключить");
+  AppendMenu(hPopupMenu, MF_STRING, WM_MENU_RESTORE, langstring[19]);
+  AppendMenu(hPopupMenu, MF_STRING, WM_MENU_CONNECTION, langstring[10]);
   EnableMenuItem(hPopupMenu, WM_MENU_CONNECTION, MF_BYCOMMAND || MF_GRAYED);
-  AppendMenu(hPopupMenu, MF_STRING, WM_MENU_CLOSE, "Закрыть");
-  AppendMenu(hPopupMenu, MF_STRING, WM_MENU_ABOUT, "О программе");
+  AppendMenu(hPopupMenu, MF_STRING, WM_MENU_CLOSE, langstring[20]);
+  AppendMenu(hPopupMenu, MF_STRING, WM_MENU_ABOUT, langstring[15]);
 
   //Показываем окно
   ShowWindow(hwnd, nCmdShow);
